@@ -17,7 +17,9 @@
     <!-- Styles -->
     <style>
         body { font-family: 'Cairo', sans-serif; background-color: #000; overflow-x: hidden; }
-        .glass-nav { background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255, 255, 255, 0.1); z-index: 50; }
+        
+        /* تحسين الأداء: تقليل الضبابية واستخدام ألوان ثابتة للشفافية */
+        .glass-nav { background: rgba(0, 0, 0, 0.9); border-bottom: 1px solid rgba(255, 255, 255, 0.1); z-index: 50; }
         
         /* Mobile Menu Animation (From Left) */
         .mobile-menu { 
@@ -25,6 +27,7 @@
             transform: translateX(-100%); 
             left: 0; 
             right: auto; 
+            will-change: transform; /* تحسين الأداء */
         }
         .mobile-menu.open { transform: translateX(0); }
         
@@ -37,9 +40,16 @@
         .modal-header-fixed { position: sticky; top: 0; z-index: 10; background-color: rgba(31, 41, 55, 0.95); backdrop-filter: blur(5px); }
         .ltr { direction: ltr; }
         
-        /* Marquee Animation */
+        /* Marquee Animation - Performance Optimized */
         .marquee-wrapper { overflow: hidden; width: 100%; position: relative; mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent); }
-        .marquee-content { display: flex; width: max-content; animation: scrollLeft 40s linear infinite; }
+        .marquee-content { 
+            display: flex; 
+            width: max-content; 
+            animation: scrollLeft 45s linear infinite; 
+            /* Hardware Acceleration to prevent lag */
+            transform: translateZ(0); 
+            backface-visibility: hidden;
+        }
         .marquee-wrapper:hover .marquee-content { animation-play-state: paused; }
         @keyframes scrollLeft { 0% { transform: translateX(0); } 100% { transform: translateX(50%); } }
     </style>
@@ -57,7 +67,6 @@
         const FB_PAGE = "https://www.facebook.com/share/1EwRcGeCDs/"; 
         const CLOUD_NAME = "db9h7zm1h"; 
         const UPLOAD_PRESET = "souq_upload"; 
-        // Changed to 'auto' to support video upload
         const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`;
         
         let isAdmin = false; 
@@ -103,7 +112,6 @@
         }
 
         function isVideo(url) {
-            // Check extension or Cloudinary resource type pattern
             return url.match(/\.(mp4|webm|ogg|mov)$/i) || url.includes('/video/upload/');
         }
 
@@ -162,33 +170,17 @@
         }
 
         function updateUIForAdmin(isLoggedIn) {
-            // Desktop Elements
-            const desktopAdminGroup = document.getElementById('desktopAdminGroup');
-            const desktopLoginIcon = document.getElementById('desktopLoginIcon');
-            
-            // Mobile Elements
+            // Mobile/Sidebar Elements (Used for both Desktop & Mobile now via Sidebar)
             const mobileLoginBtn = document.getElementById('mobileLoginBtn');
             const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
             const mobileAdminActions = document.getElementById('mobileAdminActions');
 
             if (isLoggedIn) {
-                // Desktop
-                desktopAdminGroup.classList.remove('hidden');
-                desktopAdminGroup.classList.add('flex');
-                desktopLoginIcon.classList.add('hidden');
-                
-                // Mobile
                 mobileLoginBtn.classList.add('hidden');
                 mobileLogoutBtn.classList.remove('hidden');
                 mobileAdminActions.classList.remove('hidden');
                 mobileAdminActions.classList.add('grid');
             } else {
-                // Desktop
-                desktopAdminGroup.classList.add('hidden');
-                desktopAdminGroup.classList.remove('flex');
-                desktopLoginIcon.classList.remove('hidden');
-
-                // Mobile
                 mobileLoginBtn.classList.remove('hidden');
                 mobileLogoutBtn.classList.add('hidden');
                 mobileAdminActions.classList.add('hidden');
@@ -221,30 +213,27 @@
             const videoContainer = document.getElementById('video-container');
             const videoSection = document.getElementById('video-section');
 
-            // 1. Separate Images and Videos
             const images = items.filter(item => !isVideo(item.url));
             const videos = items.filter(item => isVideo(item.url));
 
-            // 2. Render Marquee (Images Only)
             if (images.length === 0) { 
                 track.innerHTML = ''; 
             } else {
                 const allImages = [...images, ...images, ...images]; 
                 track.innerHTML = allImages.map(img => `
-                    <div class="relative w-48 h-32 md:w-60 md:h-40 mx-2 flex-shrink-0 rounded-xl overflow-hidden border border-gray-800 group bg-gray-900">
+                    <div class="relative w-48 h-32 md:w-60 md:h-40 mx-2 flex-shrink-0 rounded-xl overflow-hidden border border-gray-800 group bg-gray-900 transform translate-z-0">
                         <img src="${img.url}" loading="lazy" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-90 hover:opacity-100">
                         ${isAdmin ? `<button onclick="confirmDelete('${img.id}', 'صورة من المعرض', 'banner')" class="absolute top-1 right-1 bg-red-600/80 hover:bg-red-600 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm shadow-md z-10 backdrop-blur-sm transition-all hover:scale-110"><i class="fas fa-trash-alt"></i></button>` : ''}
                     </div>
                 `).join('');
             }
 
-            // 3. Render Video (The latest one)
             if (videos.length > 0) {
-                const latestVideo = videos[0]; // Since we order by createdAt desc, index 0 is latest
+                const latestVideo = videos[0]; 
                 videoSection.classList.remove('hidden');
                 videoContainer.innerHTML = `
-                    <div class="relative w-full max-w-4xl mx-auto rounded-2xl overflow-hidden shadow-2xl border border-gray-700 bg-gray-900">
-                        <video controls autoplay muted loop playsinline class="w-full h-auto max-h-[500px] object-cover">
+                    <div class="relative w-full mx-auto rounded-2xl overflow-hidden shadow-2xl border border-gray-700 bg-gray-900/50">
+                        <video controls autoplay muted playsinline loop class="w-full h-auto max-h-[400px] object-contain">
                             <source src="${latestVideo.url}" type="video/mp4">
                             متصفحك لا يدعم تشغيل الفيديو.
                         </video>
@@ -285,7 +274,7 @@
 
                 card.innerHTML = `
                     <div class="relative h-56 overflow-hidden">
-                        <img src="${imageUrl}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                        <img src="${imageUrl}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy">
                         <div class="absolute top-4 right-4 bg-teal-600/90 text-white text-[10px] font-bold px-2 py-1 rounded shadow-md z-10">${trip.durationText || 'غير محدد'}</div>
                         ${statusTag}
                         <button onclick="shareTrip('${trip.title}', '?tripId=${trip.id}')" class="absolute bottom-4 right-4 bg-white text-gray-900 w-8 h-8 rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform"><i class="fas fa-share-alt"></i></button>
@@ -527,9 +516,9 @@
 <body class="bg-gray-900 min-h-screen relative text-gray-100 selection:bg-teal-500 selection:text-white">
 
     <div class="fixed inset-0 z-0">
-        <!-- Restored Black Blur Overlay -->
+        <!-- Original Black Overlay Restored (Darker, no heavy blur for performance) -->
         <img src="https://images.pexels.com/photos/2559941/pexels-photo-2559941.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" class="w-full h-full object-cover">
-        <div class="absolute inset-0 bg-black/30 backdrop-blur-[2px]"></div> 
+        <div class="absolute inset-0 bg-black/70"></div> 
     </div>
 
     <div class="relative z-10 flex flex-col min-h-screen">
@@ -552,34 +541,14 @@
                 
                 <!-- Left: Admin Controls -->
                 <div class="flex items-center gap-3">
-                    <!-- Desktop Login Icon -->
-                    <button id="desktopLoginIcon" onclick="toggleLoginModal()" class="hidden md:block text-gray-400 hover:text-white transition-colors" title="دخول الإدارة">
-                        <i class="fas fa-lock"></i>
-                    </button>
-
-                    <!-- Desktop Admin Action Buttons (Wrapped to NEVER show on mobile) -->
-                    <div class="hidden md:block">
-                        <div id="desktopAdminGroup" class="hidden flex items-center gap-2">
-                            <button onclick="toggleBannerModal()" class="bg-white/5 hover:bg-white/10 border border-white/10 text-white px-3 py-1.5 rounded-lg text-xs flex items-center gap-2 backdrop-blur-md transition-all">
-                                <i class="fas fa-images text-teal-400"></i> المعرض
-                            </button>
-                            <button onclick="toggleTripModal()" class="bg-white/5 hover:bg-white/10 border border-white/10 text-white px-3 py-1.5 rounded-lg text-xs flex items-center gap-2 backdrop-blur-md transition-all">
-                                <i class="fas fa-plus text-teal-400"></i> رحلة
-                            </button>
-                            <button onclick="handleLogout()" class="text-red-400 hover:text-red-300 text-xs px-2"><i class="fas fa-sign-out-alt"></i></button>
-                        </div>
-                    </div>
-
-                    <!-- Mobile Toggle -->
-                    <div class="md:hidden">
-                        <button onclick="toggleMobileMenu()" class="text-white text-xl p-2"><i class="fas fa-bars"></i></button>
-                    </div>
+                    <!-- Hamburger Menu for ALL Screens (To access Login) -->
+                    <button onclick="toggleMobileMenu()" class="text-white text-xl p-2"><i class="fas fa-bars"></i></button>
                 </div>
             </div>
         </nav>
         
-        <!-- Mobile Menu (Sidebar) -->
-        <div id="mobile-menu" class="mobile-menu fixed top-0 w-64 h-auto min-h-[50vh] bg-gray-900/95 backdrop-blur-xl z-50 p-5 shadow-2xl md:hidden flex flex-col gap-6 rounded-br-2xl border-r border-b border-gray-700">
+        <!-- Sidebar Menu (Desktop & Mobile) -->
+        <div id="mobile-menu" class="mobile-menu fixed top-0 w-64 h-auto min-h-[50vh] bg-gray-900/95 backdrop-blur-xl z-50 p-5 shadow-2xl flex flex-col gap-6 rounded-br-2xl border-r border-b border-gray-700">
             <div class="flex justify-between items-center border-b border-gray-700 pb-4">
                 <span class="text-lg font-bold text-white">القائمة</span>
                 <button onclick="toggleMobileMenu()" class="text-gray-400 hover:text-white w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-800"><i class="fas fa-times"></i></button>
@@ -591,8 +560,9 @@
                 <a href="#" target="_blank" class="text-gray-300 hover:text-teal-400 flex items-center gap-3 fb-link" onclick="toggleMobileMenu()"><i class="fab fa-facebook w-5 text-center"></i> فيسبوك</a>
             </nav>
             
-            <!-- Mobile Admin Section -->
+            <!-- Admin Section in Sidebar -->
             <div class="mt-2 border-t border-gray-700 pt-4">
+                <!-- Login/Logout -->
                 <button id="mobileLoginBtn" onclick="toggleLoginModal()" class="w-full text-gray-300 hover:text-white border border-gray-600/50 bg-gray-800/50 px-4 py-2.5 rounded-xl transition-all flex items-center gap-3 mb-3">
                     <i class="fas fa-lock w-5 text-center text-teal-500"></i> <span>دخول الإدارة</span>
                 </button>
@@ -600,6 +570,7 @@
                     <i class="fas fa-sign-out-alt w-5 text-center"></i> <span>خروج</span>
                 </button>
 
+                <!-- Admin Actions -->
                 <div id="mobileAdminActions" class="hidden grid-cols-2 gap-3">
                     <button onclick="toggleBannerModal(); toggleMobileMenu();" class="flex flex-col items-center justify-center bg-teal-900/20 border border-teal-500/30 text-teal-100 py-3 rounded-xl text-xs gap-2 hover:bg-teal-900/40">
                         <i class="fas fa-images text-lg"></i> إضافة صور
@@ -628,8 +599,8 @@
             </div>
         </header>
 
-        <!-- NEW Video Section -->
-        <section id="video-section" class="hidden w-full max-w-6xl mx-auto px-4 pb-12">
+        <!-- Video Section (Smaller Card) -->
+        <section id="video-section" class="hidden w-full max-w-2xl mx-auto px-4 pb-12">
             <div id="video-container" class="w-full"></div>
         </section>
 
@@ -661,7 +632,9 @@
     </div>
 
     <!-- Modals -->
-    <!-- 1. Login Modal -->
+    <!-- Login, Delete, Booking, Forms, Add Trip, Add Banner Modals remain unchanged from previous versions -->
+    
+    <!-- Login Modal -->
     <div id="loginModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
         <div class="bg-gray-800 border border-teal-500/50 w-full max-w-sm rounded-2xl shadow-2xl p-6 transform transition-all scale-100">
             <h3 class="text-xl font-bold text-center text-white mb-4">دخول الإدارة</h3>
@@ -674,7 +647,7 @@
         </div>
     </div>
 
-    <!-- 2. Delete Confirmation Modal -->
+    <!-- Delete Modal -->
     <div id="deleteModal" class="fixed inset-0 z-[200] hidden items-center justify-center bg-black/90 backdrop-blur-sm p-4 transition-opacity">
         <div class="bg-gray-800 border border-red-500/30 w-full max-w-sm rounded-2xl shadow-2xl p-6 text-center transform transition-transform scale-100">
             <div class="w-16 h-16 bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -689,7 +662,7 @@
         </div>
     </div>
 
-    <!-- 3. Booking Options Modal -->
+    <!-- Booking Options -->
     <div id="bookingOptionsModal" class="fixed inset-0 z-[200] hidden items-center justify-center bg-black/90 backdrop-blur-sm p-4">
         <div class="bg-gray-800 border border-gray-700 w-full max-w-sm rounded-2xl shadow-2xl p-6 text-center">
             <h3 class="text-xl font-bold text-white mb-6">كيف يمكننا مساعدتك؟</h3>
@@ -705,7 +678,7 @@
         </div>
     </div>
 
-    <!-- 4. Booking Form Modal -->
+    <!-- Booking Form -->
     <div id="bookingFormModal" class="fixed inset-0 z-[200] hidden items-center justify-center bg-black/90 backdrop-blur-sm p-4">
         <div class="bg-gray-800 border border-gray-700 w-full max-w-md rounded-2xl shadow-2xl p-6">
             <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
@@ -744,17 +717,15 @@
         </div>
     </div>
 
-    <!-- 5. Add/Edit Trip Modal (RESTORED TO ORIGINAL DESIGN + REQUIRED PHONE) -->
+    <!-- Add Trip Modal -->
     <div id="addTripModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/80 backdrop-blur-sm p-0 md:p-4 overflow-y-auto">
         <div class="bg-gray-800 border border-gray-700 w-full md:max-w-xl md:my-8 rounded-none md:rounded-2xl shadow-2xl overflow-hidden h-full md:h-auto animate-[fadeIn_0.3s_ease-out] flex flex-col">
-            
             <div class="modal-header-fixed p-4 border-b border-gray-700 flex justify-between items-center">
                 <h3 id="modalTitle" class="text-xl font-bold text-white">إضافة رحلة جديدة</h3>
                 <button onclick="closeTripModal()" class="text-gray-400 hover:text-white transition-colors">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
-            
             <form id="addTripForm" onsubmit="handleTripSubmit(event)" class="p-4 md:p-6 space-y-4 md:space-y-6 overflow-y-auto">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
@@ -766,7 +737,6 @@
                         <input type="text" id="tripLocation" required class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-teal-500" placeholder="مثال: جنوب سيناء">
                     </div>
                 </div>
-
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
                     <div>
                         <label class="block text-sm font-medium text-gray-400 mb-1">السعر (جنية)</label>
@@ -785,7 +755,6 @@
                         <input type="number" id="availableSeats" required class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-teal-500" placeholder="20">
                     </div>
                 </div>
-                
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-sm font-medium text-gray-400 mb-1">عدد ليالي الرحلة</label>
@@ -812,17 +781,14 @@
                          <input type="number" id="daysCustom" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-teal-500 mt-2 hidden" placeholder="أدخل العدد يدوياً">
                     </div>
                 </div>
-
                 <div>
                     <label class="block text-sm font-medium text-gray-400 mb-1">الوصف التفصيلي</label>
                     <textarea id="tripDesc" required rows="3" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-teal-500" placeholder="تفاصيل البرنامج والمزارات الرئيسية..."></textarea>
                 </div>
-
                 <div class="bg-gray-900 p-4 rounded-xl border border-gray-700">
                     <h4 class="text-white font-bold mb-3"><i class="fas fa-upload ml-2"></i> صورة الرحلة (صورة واحدة)</h4>
                     <input type="file" id="tripImageFile" accept="image/*" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-teal-500 text-left ltr">
                 </div>
-
                 <button type="submit" id="submitBtn" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-lg shadow-lg transition-colors mt-2">
                     حفظ ونشر الرحلة
                 </button>
@@ -830,7 +796,7 @@
         </div>
     </div>
 
-    <!-- Add Banner Modal (UPDATED FOR VIDEO) -->
+    <!-- Add Banner Modal -->
     <div id="addBannerModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
         <div class="bg-gray-800 border border-gray-700 w-full max-w-lg rounded-2xl shadow-2xl p-6">
             <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
