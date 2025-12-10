@@ -1,17 +1,34 @@
 {
-  "name": "Nozha TraVal",
-  "short_name": "Nozha TraVal",
+  "name": "Wolf TraVal",
+  "short_name": "Wolf TraVal",
+  "description": "اكتشف أفضل المغامرات وعروض السياحة والترفيه والرحلات البحرية في مصر.",
+  "id": "/index.html",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
+  "gcm_sender_id": "103953800507",
   "icons": [
     {
-      "src": "https://raw.githubusercontent.com/shehabt1000-boop/Wolf-TraVal/791f9276439758440e0cedbe2a11d50197e90e28/Nozha%20Traval.jpg",
+      "src": "https://img.icons8.com/fluency/192/airplane-take-off.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://img.icons8.com/fluency/512/airplane-take-off.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "https://raw.githubusercontent.com/shehabt1000-boop/-/8feac62d11c707c07fd2d22afba278c69070d152/Wolf%20TraVal%20.jpg",
+      "sizes": "1080x1920",
       "type": "image/jpeg",
-      "sizes": "512x512"
+      "form_factor": "wide"
     }
   ]
 }
-
