@@ -2,7 +2,7 @@
       "relation": ["delegate_permission/common.handle_all_urls"],
       "target": {
         "namespace": "android_app",
-        "package_name": "io.github.shehabt1000_boop.twa",
-        "sha256_cert_fingerprints": ["4F:1A:5E:E1:42:71:7B:78:52:46:41:EB:7E:F2:27:F3:92:16:94:31:10:9D:F9:B3:E5:3E:9E:EE:8A:5E:9E:6E"]
+        "package_name": "app.netlify.wolf_traval.twa",
+        "sha256_cert_fingerprints": ["19:87:E3:5B:F2:BD:E5:34:14:B4:1F:30:84:5F:28:4A:FD:43:16:DD:BE:A8:BC:E6:A7:F8:5F:A6:2C:EE:DA:32"]
       }
     }]
