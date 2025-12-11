@@ -1,9 +1,11 @@
+{
   "name": "Wolf TraVal",
   "short_name": "Wolf TraVal",
   "description": "اكتشف أفضل المغامرات وعروض السياحة والترفيه والرحلات البحرية في مصر.",
   "id": "/index.html",
   "start_url": "./index.html",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "tabbed", "standalone", "minimal-ui"],
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
   "orientation": "portrait-primary",
@@ -29,5 +31,90 @@
       "type": "image/jpeg",
       "form_factor": "wide"
     }
-  ]
+  ],
+  
+  "shortcuts": [
+    {
+      "name": "أحدث العروض",
+      "short_name": "العروض",
+      "description": "تصفح العروض السياحية",
+      "url": "./index.html?page=offers",
+      "icons": [{ "src": "https://raw.githubusercontent.com/shehabt1000-boop/Wolf-TraVal/6073c5902f1c027d11188f41f9196e7329a5bfac/Wolf.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "حجز رحلة",
+      "short_name": "حجز",
+      "url": "./index.html?page=booking"
+    }
+  ],
+
+  "share_target": {
+    "action": "./index.html?share-target",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "media",
+          "accept": ["image/*"]
+        }
+      ]
+    }
+  },
+
+  "protocol_handlers": [
+    {
+      "protocol": "web+wolftraval",
+      "url": "./index.html?trip=%s"
+    }
+  ],
+
+  "file_handlers": [
+    {
+      "action": "./index.html",
+      "accept": {
+        "text/plain": [".txt"],
+        "image/jpeg": [".jpg", ".jpeg"],
+        "image/png": [".png"]
+      },
+      "icons": [{ "src": "https://raw.githubusercontent.com/shehabt1000-boop/Wolf-TraVal/6073c5902f1c027d11188f41f9196e7329a5bfac/Wolf.png", "sizes": "192x192" }]
+    }
+  ],
+
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+
+  "note_taking": {
+    "new_note_url": "./index.html?action=new-note"
+  },
+
+  "widgets": [
+    {
+      "name": "Wolf Offers",
+      "description": "View latest travel offers",
+      "tag": "wolf-widget",
+      "template": "list",
+      "ms_ac_template": "./widgets/offers.json",
+      "data": "./widgets/data.json",
+      "type": "application/json",
+      "screenshots": [
+         {
+          "src": "https://raw.githubusercontent.com/shehabt1000-boop/Wolf-TraVal/6073c5902f1c027d11188f41f9196e7329a5bfac/Wolf.png",
+          "sizes": "192x192",
+          "label": "Offers Widget"
+         }
+      ],
+      "icons": [{ "src": "https://raw.githubusercontent.com/shehabt1000-boop/Wolf-TraVal/6073c5902f1c027d11188f41f9196e7329a5bfac/Wolf.png", "sizes": "192x192" }]
+    }
+  ],
+
+  "edge_side_panel": {
+    "preferred_width": 380
+  },
+
+  "categories": ["travel", "lifestyle", "productivity"]
 }
